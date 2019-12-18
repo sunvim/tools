@@ -3,10 +3,8 @@ package secret
 import (
 	"bytes"
 	"encoding/base64"
-	"encoding/pem"
 	"html/template"
 	"os"
-	"strings"
 
 	"github.com/ghodss/yaml"
 	"github.com/golang/glog"
@@ -23,8 +21,8 @@ metadata:
   name: {{ .SrvName }}-certs
   namespace: {{ .Namespace }}
 data:
-  cert.pem: $CertPem$
-  key.pem:  $KeyPem$
+  cert.pem: {{ .CertPem }}
+  key.pem:  {{ .KeyPem }}
 `
 
 func CreateCertSecret(srvName, namespace, certPem, keyPem, kubeconfig string) error {
@@ -33,24 +31,24 @@ func CreateCertSecret(srvName, namespace, certPem, keyPem, kubeconfig string) er
 		glog.Error(err)
 		return err
 	}
-	cps := getPemBody(certPem)
-	kps := getPemBody(keyPem)
 	arg := struct {
 		SrvName   string
 		Namespace string
+		CertPem   string
+		KeyPem    string
 	}{
 		SrvName:   srvName,
 		Namespace: namespace,
+		CertPem:   base64.StdEncoding.EncodeToString([]byte(certPem)),
+		KeyPem:    base64.StdEncoding.EncodeToString([]byte(keyPem)),
 	}
 	buf := bytes.NewBuffer([]byte{})
 	if err = tpl.Execute(buf, &arg); err != nil {
 		glog.Error(err)
 		return err
 	}
-	bs := strings.Replace(buf.String(), "$CertPem$", cps, -1)
-	bs = strings.Replace(bs, "$KeyPem$", kps, -1)
 	sec := corev1.Secret{}
-	if err = yaml.Unmarshal([]byte(bs), &sec); err != nil {
+	if err = yaml.Unmarshal(buf.Bytes(), &sec); err != nil {
 		glog.Error(err)
 		return err
 	}
@@ -69,9 +67,4 @@ func CreateCertSecret(srvName, namespace, certPem, keyPem, kubeconfig string) er
 		return err
 	}
 	return nil
-}
-
-func getPemBody(body string) string {
-	block, _ := pem.Decode([]byte(body))
-	return base64.StdEncoding.EncodeToString(block.Bytes)
 }
