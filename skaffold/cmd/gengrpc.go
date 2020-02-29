@@ -1,5 +1,5 @@
 /*
-Copyright © 2019 Mobius <sv0220@163.com>
+Copyright © 2020 Mobius <sv0220@163.com>
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -17,32 +17,26 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 package cmd
 
 import (
-	"flag"
-	"fmt"
-	"os"
+	"github.com/sunvim/tools/skaffold/pkg/gengrpc"
 
 	"github.com/spf13/cobra"
-	"github.com/spf13/pflag"
 )
 
-// rootCmd represents the base command when called without any subcommands
-var rootCmd = &cobra.Command{
-	Use:   "skaffold",
-	Short: "create kubernetes web hook application scaffold",
+// gengrpcCmd represents the gengrpc command
+var gengrpcCmd = &cobra.Command{
+	Use:   "gengrpc",
+	Short: "generate grpc framework code",
 	Long:  ``,
-}
-
-// Execute adds all child commands to the root command and sets flags appropriately.
-// This is called by main.main(). It only needs to happen once to the rootCmd.
-func Execute() {
-	if err := rootCmd.Execute(); err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
+	Run:   gengrpc.GrpcRun,
 }
 
 func init() {
-	pflag.CommandLine.AddGoFlagSet(flag.CommandLine)
-	pflag.Set("logtostderr", "true")
-	pflag.Set("stderrthreshold", "INFO")
+	rootCmd.AddCommand(gengrpcCmd)
+
+	gengrpcCmd.Flags().BoolP("swagger", "s", true, "specify swagger ui directory")
+	gengrpcCmd.Flags().StringP("package", "p", "", "specify package name")
+	gengrpcCmd.Flags().StringP("proto", "", "proto", "specify proto buffer files directory")
+	gengrpcCmd.Flags().StringP("proto_path", "", "/home/mobius/projects",
+		"specify third party proto buffer files directory")
+
 }

@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package rbac;
+
+
+service InternalRole {
+    rpc Authorize (AuthorizeRequest) returns (AuthorizeResponse){}
+}
+
+message AuthorizeRequest {
+    string subject = 1 ;
+    string resource = 2 ;
+    string action = 3 ;
+}
+
+message AuthorizeResponse {
+    bool ok = 1;
+}
